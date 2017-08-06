@@ -1,5 +1,5 @@
 #include <Adafruit_NeoPixel.h>
-#define PANELPIN 6
+#define PANELPIN 13
 
 Adafruit_NeoPixel panel = Adafruit_NeoPixel(56, PANELPIN, NEO_GRB + NEO_KHZ800);
 
@@ -18,9 +18,9 @@ void loop() {
   delay(250);
 }
 
-void random(){
-  for( i=0;i<56;i++){
-    panel.setpixelcolor(random(254), random(254, random(254));
+void all_random(){
+  for(int i=0;i<56;i++){
+    panel.setPixelColor(i, random(254), random(254), random(254));
   }
   panel.show();
 }
