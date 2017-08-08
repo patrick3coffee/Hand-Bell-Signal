@@ -1,30 +1,37 @@
+#define ROWS 8
+#define COLS 7
+
 #include <Adafruit_NeoPixel.h>
 
 Adafruit_NeoPixel panel = Adafruit_NeoPixel(56, 13, NEO_GRB + NEO_KHZ800);
 
-bool show_colors[8] = {false, false, false, false, false, false, false, false};
-uint32_t colors[8] = {
-panel.Color(0, 255, 255),   //teal - first button
-panel.Color(255, 0, 0),     //red
-panel.Color(0, 0, 255),     //blue
-panel.Color(255, 65, 0),   //orange
-panel.Color(100, 0, 255),    //purple
-panel.Color(255, 125, 0),   //yellow
-panel.Color(255, 0, 0),     //red - there are two reds
-panel.Color(0, 255, 0)     //green
+bool show_shape[ROWS];
+uint32_t colors[ROWS] = {
+  panel.Color(0, 255, 255),   //teal - first button
+  panel.Color(255, 0, 0),     //red
+  panel.Color(0, 0, 255),     //blue
+  panel.Color(255, 65, 0),    //orange
+  panel.Color(100, 0, 255),   //purple
+  panel.Color(255, 125, 0),   //yellow
+  panel.Color(255, 0, 0),     //red - there are two reds
+  panel.Color(0, 255, 0)      //green
 };
-int shapes[8][7] = {
-  {5,12,21,28,37,44,53},
-  {1,16,17,32,33,48,49},
-  {6,11,22,27,38,43,54},
-  {2,15,18,31,34,47,50},
-  {7,10,23,26,39,42,55},
-  {3,14,19,30,35,46,51},
-  {8,9,24,25,40,41,56},
-  {4,13,20,29,36,45,52}
-};
+int grid[ROWS][COLS];       // actual addresses of serpentine patterned addressable LEDs
 
 void setup() {
+  
+  // fill the grid arraw\y with addresses
+  for(int row=0; row<ROWS; row++){
+    // even rows
+    for(int column=0; column<COLS; column+=2){
+      grid[row][column]=row*ROWS+column;
+    }
+    // odd rows
+    for(int column=1; column<COLS; column=+2){
+      grid[row][column]=(row+1)*ROWS-column-1;
+    }
+  }
+  
   // Initialize the panel
   panel.begin();
   panel.show();
@@ -62,22 +69,22 @@ void all_random(){
 void check_buttons(){
   for(int i=0; i<8; i++){
       if(digitalRead(i+2) == LOW){
-        show_colors[i] = true;
+        show_shape[i] = true;
       }
       else{
-        show_colors[i] = false;
+        show_shape[i] = false;
       }
     }
 }
 
 void display_colors(){
-  for(int color=0; color<8; color++){
+  for(int color=0; color<ROWS; color++){
     for(int pixel = 0; pixel < 7; pixel++){
-      if(show_colors[color]){
-        panel.setPixelColor(shapes[color][pixel]-1,colors[color]);
+      if(show_shape[color]){
+        panel.setPixelColor(grid[color][pixel],colors[color]);
       }
       else{
-        panel.setPixelColor(shapes[color][pixel]-1,0,0,0);
+        panel.setPixelColor(grid[color][pixel],0,0,0);
       }
     }
   }
