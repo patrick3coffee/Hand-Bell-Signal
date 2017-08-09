@@ -1,35 +1,57 @@
 #define ROWS 8
 #define COLS 7
+#define DEBUG 1
 
 #include <Adafruit_NeoPixel.h>
 
 Adafruit_NeoPixel panel = Adafruit_NeoPixel(56, 13, NEO_GRB + NEO_KHZ800);
 
 bool show_shape[ROWS];
-uint32_t colors[ROWS] = {
-  panel.Color(0, 255, 255),   //teal - first button
+uint32_t colors[7] = {
   panel.Color(255, 0, 0),     //red
-  panel.Color(0, 0, 255),     //blue
   panel.Color(255, 65, 0),    //orange
-  panel.Color(100, 0, 255),   //purple
   panel.Color(255, 125, 0),   //yellow
-  panel.Color(255, 0, 0),     //red - there are two reds
-  panel.Color(0, 255, 0)      //green
+  panel.Color(0, 255, 0),     //green
+  panel.Color(0, 255, 255),   //teal
+  panel.Color(0, 0, 255),     //blue
+  panel.Color(100, 0, 255)    //purple
 };
 int grid[ROWS][COLS];       // actual addresses of serpentine patterned addressable LEDs
 
+int button_color_map[8][2] = {      // index is row
+  {3,0},                            // first value is button number
+  {5,1},                            // second value is color
+  {7,2},
+  {9,3},
+  {2,4},
+  {4,5},
+  {6,6},
+  {8,0}
+};
+
+
 void setup() {
   
+#ifdef DEBUG
+  Serial.begin(9600);
+#endif
   // fill the grid arraw\y with addresses
   for(int row=0; row<ROWS; row++){
-    // even rows
-    for(int column=0; column<COLS; column+=2){
-      grid[row][column]=row*ROWS+column;
+    for(int column=0; column<COLS; column++){
+      if(column%2 == 0){
+       grid[row][column]=row+ROWS*column;
+      }
+      else{
+       grid[row][column]=ROWS*(column+1)-row-1;
+      }
+#ifdef DEBUG
+      Serial.print(grid[row][column]);
+      Serial.print(", ");
+#endif
     }
-    // odd rows
-    for(int column=1; column<COLS; column=+2){
-      grid[row][column]=(row+1)*ROWS-column-1;
-    }
+#ifdef DEBUG
+    Serial.println(" - end row");
+#endif
   }
   
   // Initialize the panel
@@ -57,6 +79,7 @@ void setup() {
 void loop() {
   check_buttons();
   display_colors();
+  //test_order();
 }
 
 void all_random(){
@@ -68,7 +91,7 @@ void all_random(){
 
 void check_buttons(){
   for(int i=0; i<8; i++){
-      if(digitalRead(i+2) == LOW){
+      if(digitalRead(button_color_map[i][0]) == LOW){
         show_shape[i] = true;
       }
       else{
@@ -78,16 +101,31 @@ void check_buttons(){
 }
 
 void display_colors(){
-  for(int color=0; color<ROWS; color++){
-    for(int pixel = 0; pixel < 7; pixel++){
-      if(show_shape[color]){
-        panel.setPixelColor(grid[color][pixel],colors[color]);
+  for(int row=0; row<ROWS; row++){
+    if(show_shape[row]){
+      for(int column = 0; column < COLS; column++){
+        panel.setPixelColor(grid[row][column],colors[button_color_map[row][1]]);
       }
-      else{
-        panel.setPixelColor(grid[color][pixel],0,0,0);
+    }
+    else{
+      for(int column = 0; column < COLS; column++){
+        panel.setPixelColor(grid[row][column],0,0,0);
       }
     }
   }
   panel.show();
+  delay(10);
+}
+
+void test_order(){
+  for(int row=0; row<ROWS; row++){
+    for(int col = 0; col < COLS; col++){
+      panel.setPixelColor(grid[row][col],colors[row]);
+      panel.show();
+      delay(100);
+      panel.setPixelColor(grid[row][col],0,0,0);
+      panel.show();
+    }
+  }
 }
 
